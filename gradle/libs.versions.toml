@@ -7,6 +7,8 @@ appcompat = "1.7.0"
 material = "1.12.0"
 activity = "1.9.2"
 rhino = "1.5.2"
+datastore = "1.1.1"
+rxjava = "2.1.1"
 constraintlayout = "2.1.4"
 
 [libraries]
@@ -17,6 +19,7 @@ appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "a
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 rhino-android = { group = "com.faendir.rhino", name = "rhino-android", version.ref = "rhino"}
+datastore = {group = "androidx.datastore", name = "datastore-preferences-rxjava2", version.ref = "datastore"}
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 
 [plugins]

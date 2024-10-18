@@ -1,5 +1,6 @@
 package com.example.calculator;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -10,8 +11,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.datastore.preferences.core.MutablePreferences;
+
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
+
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -70,6 +78,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             result.setText("0");
             return;
         }
+        if(btnText.equals("MS")){
+            saveInMemory();
+            return;
+        }
+        if(btnText.equals("MR")){
+            readFromMemory(calculationData);
+            return;
+        }
+        if(btnText.equals("MC")){
+            clearFromMemory(calculationData);
+            return;
+        }
         if (btnText.equals("=")){
             calculation.setText("");
             result.getText();
@@ -80,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         calculation.setText(calculationData);
 
         String calculationResult = getResult(calculationData);
+
         if (!calculationResult.equals("Err")) {
             result.setText(calculationResult);
         }
@@ -98,5 +119,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }catch (Exception e){
             return "Err";
         }
+    }
+
+    private void saveInMemory(){
+        String result = this.result.getText().toString();
+        DataStoreManager.getInstance(this).getDataStore()
+                .updateDataAsync(prefsIn -> {
+                    MutablePreferences mutablePreferences = prefsIn.toMutablePreferences();
+                    mutablePreferences.set(DataStoreManager.MEMORY_KEY, result);
+                    return Single.just(mutablePreferences);
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe();
+    }
+
+    @SuppressLint({"CheckResult", "SetTextI18n"})
+    private void readFromMemory(String calculationData){
+        DataStoreManager.getInstance(this).getDataStore()
+                .data()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(prefs -> {
+                    String savedMemory = prefs.get(DataStoreManager.MEMORY_KEY);
+                    if (savedMemory != null) {
+                        calculation.setText(calculationData + savedMemory);
+                        result.setText(getResult(calculationData + savedMemory));
+                    }
+                });
+    }
+
+    @SuppressLint("CheckResult")
+    private void clearFromMemory(String calculationData){
+        DataStoreManager.getInstance(this).getDataStore()
+                .updateDataAsync(prefsIn ->{
+                    MutablePreferences mutablePreferences = prefsIn.toMutablePreferences();
+                    mutablePreferences.remove(DataStoreManager.MEMORY_KEY);
+                    return Single.just(mutablePreferences);
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        prefs ->{
+                            if(!calculationData.isEmpty()){
+                                calculation.setText(calculationData);
+                                result.setText(getResult(calculationData));
+                            }else{
+                                calculation.setText("");
+                                result.setText("0");
+                            }
+                        }
+                );
     }
 }
