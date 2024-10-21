@@ -5,17 +5,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.datastore.preferences.core.MutablePreferences;
-
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
-
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -44,10 +41,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         result = findViewById(R.id.result);
         calculation = findViewById(R.id.calculation);
 
-        // Initialize buttons
         initButtons();
 
-        // Disable 0 and operation buttons until a number is pressed
         disableButtons(btn_0, btn_plus, btn_minus, btn_mult, btn_div);
     }
 
@@ -73,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn_mread = findViewById(R.id.btn_mread);
         btn_mclear = findViewById(R.id.btn_mclear);
 
-        // Set click listeners
         btn_0.setOnClickListener(this);
         btn_1.setOnClickListener(this);
         btn_2.setOnClickListener(this);
@@ -142,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         } else {
             if (!isNumberPressed && (btnText.equals("0") || btnText.matches("[+\\-*/]"))) {
-                return; // Prevent pressing 0 or math operations first
+                return;
             }
             calculationData += btnText;
             calculation.setText(calculationData);
@@ -163,9 +157,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Scriptable scope = rhino.initStandardObjects();
             String calculationResult = rhino.evaluateString(scope, data, "JavaScript", 1, null).toString();
 
-            // Limit the decimal places to avoid floating-point inaccuracies
             BigDecimal resultValue = new BigDecimal(calculationResult);
-            resultValue = resultValue.setScale(10, BigDecimal.ROUND_HALF_UP);  // Up to 10 decimal places
+            resultValue = resultValue.setScale(10, BigDecimal.ROUND_HALF_UP);
 
             calculationResult = resultValue.stripTrailingZeros().toPlainString();
             return calculationResult;
@@ -176,7 +169,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    // Memory functions
     private void saveInMemory() {
         String result = this.result.getText().toString();
         DataStoreManager.getInstance(this).getDataStore()
@@ -199,19 +191,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .subscribe(prefs -> {
                     String savedMemory = prefs.get(DataStoreManager.MEMORY_KEY);
                     if (savedMemory != null) {
-                        // Update the calculation and result TextViews
                         calculation.setText(calculationData + savedMemory);
                         result.setText(getResult(calculationData + savedMemory));
-
-                        // Enable operation buttons and 0
                         enableButtons(btn_0, btn_plus, btn_minus, btn_mult, btn_div);
-
-                        // Set the flag that a number has been pressed
                         isNumberPressed = true;
                     }
                 });
     }
-
 
     @SuppressLint("CheckResult")
     private void clearFromMemory(String calculationData) {
